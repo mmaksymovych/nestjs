@@ -6,6 +6,7 @@ import { CreateTaskDTO } from './dto/create-task.dto';
 import { TasksRespository } from './tasks.repository';
 import { Task } from './task.entity';
 import { GetTasksFilterDTO } from './dto/task-filter.dto';
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -14,8 +15,8 @@ export class TasksService {
     private tasksRepository: TasksRespository,
   ) {}
 
-  async getTaskById(id: string): Promise<Task> {
-    const task = await this.tasksRepository.findOne({ id });
+  async getTaskById(id: string, user: User): Promise<Task> {
+    const task = await this.tasksRepository.findOne({ id, user });
 
     if (!task) {
       throw new NotFoundException();
@@ -24,20 +25,24 @@ export class TasksService {
     return task;
   }
 
-  createTask(createTaskDTO: CreateTaskDTO): Promise<Task> {
-    return this.tasksRepository.createTask(createTaskDTO);
+  createTask(createTaskDTO: CreateTaskDTO, user: User): Promise<Task> {
+    return this.tasksRepository.createTask(createTaskDTO, user);
   }
 
-  async deleteTaskById(id: string): Promise<void> {
-    const result = await this.tasksRepository.delete(id);
+  async deleteTaskById(id: string, user: User): Promise<void> {
+    const result = await this.tasksRepository.delete({ id, user });
 
     if (!result.affected) {
       throw new NotFoundException();
     }
   }
 
-  async updateStatusById(id: string, status: TaskStatus): Promise<Task> {
-    const task = await this.getTaskById(id);
+  async updateStatusById(
+    id: string,
+    status: TaskStatus,
+    user: User,
+  ): Promise<Task> {
+    const task = await this.getTaskById(id, user);
 
     task.status = status;
     await this.tasksRepository.save(task);
@@ -45,7 +50,10 @@ export class TasksService {
     return task;
   }
 
-  async getTasks(getTaskFilterDTO: GetTasksFilterDTO): Promise<Task[]> {
-    return this.tasksRepository.getTasks(getTaskFilterDTO);
+  async getTasks(
+    getTaskFilterDTO: GetTasksFilterDTO,
+    user: User,
+  ): Promise<Task[]> {
+    return this.tasksRepository.getTasks(getTaskFilterDTO, user);
   }
 }
